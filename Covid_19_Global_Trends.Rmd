@@ -1,0 +1,372 @@
+---
+title: 'Covid-19: Global Trends'
+author: 'Team: Man with a Movie Camera'
+output:
+  pdf_document: default
+  word_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Introduction
+
+The World Health Organization (WHO) declared the coronavirus disease (COVID-19) a pandemic on March 11, 2020 [1].
+The first case of coronavirus was reported on 31 December, 2019, as a viral pneumonia in Wuhan, a city in China.
+From December 2019 to December 2020, there have been 67780,361 confirmed cases of COVID-19, including 1551,214 deaths reported to WHO by 219 countries across the globe [2].
+The source of coronavirus which is zoonotic, is still being investigated and is known to transmit between animals and humans [3].
+Coronavirus causes illness such as respiratory diseases and these respiratory diseases can range from common cold to severe illness.
+The populations with more number of elderly people (above 60 years of age) and chronic illnesses are considered as the high-risk groups for COVID-19 [4].
+
+The pandemic has affected the whole world and posed various challenges in different parts of the world. It is crucial to understand the patterns in intensity of coronavirus in different regions across the world, to further understand the factors favorable for spread of the disease, the challenges posed and how to tackle them effectively.
+In this study we are going analyse the patterns in coronavirus cases across 5 continents.
+We will also look at the trends in 5 countries among the 10 worst hit countries in the world, which have reported the highest coronavirus cases namely, USA, India, Brazil, Russia and Italy.
+Furthermore, many studies [5][6] show that colder regions and cold climate are more susceptible for COVID-19, increasing the transmission rate and vulnerability.
+We are going to test this hypothesis using the findings from this analysis.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+### MA304 - Coursework 2 
+## Team - Man with a movie camera
+## COVID-19 Global Dataset from kaggle -
+#https://www.kaggle.com/josephassaker/covid19-global-dataset
+#is used for the analysis and it consists of 2 files
+
+
+#set directory
+setwd("C:\\Users\\ANANYA D\\Desktop\\MSc modules\\Exploratory data analysis and data visualization\\Assignment and coursework\\Assignment 2")
+
+#https://www.kaggle.com/josephassaker/covid19-global-dataset?select=worldometer_coronavirus_summary_data.csv
+#load data
+#table 1 - covid summary
+covid_summary<-read.csv("worldometer_coronavirus_summary_data.csv", header = TRUE)
+
+
+
+#load libraries
+library(plyr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+
+#missing values in data
+#missing values along columns
+#sapply(covid_summary, function(covid_summary) sum(is.na(covid_summary)))
+#missing values along rows
+#rowSums(is.na(covid_summary))
+
+#sum of active cases, recovered and deaths is equal to total confirmed cases
+#replacing empty values in total_deaths with 0 after thorough examination
+covid_summary$total_deaths<-ifelse(is.na(covid_summary$total_deaths), 0, covid_summary$total_deaths)
+## 2 cases have missing values (Netherlands and Sweden)
+```
+
+# Analyses
+
+This study uses the COVID-19 Global Dataset from kaggle[7], scrapped from Worldometer.
+The dataset contains two tables with information on covid summary and daily cases from February 2020 to March 2021.
+```{r, echo=FALSE ,fig.height=5, fig.width=11}
+
+#plot1 ####
+#global statistics of coronavirus cases
+#get the percentages for deaths, active and recovered cases globally
+percentage_total_deaths<- sum(covid_summary$total_deaths)/sum(covid_summary$total_confirmed) * 100
+percentage_total_recovered<- sum(covid_summary$total_recovered, na.rm = TRUE)/sum(covid_summary$total_confirmed) * 100
+percentage_active_cases<- sum(covid_summary$active_cases, na.rm = TRUE)/sum(covid_summary$total_confirmed) * 100
+
+#creating pie chart
+slices <- c(percentage_total_deaths, percentage_total_recovered,          percentage_active_cases)
+lbls <- paste(round(c(percentage_total_deaths, percentage_total_recovered,    percentage_active_cases), digits = 2), "%", sep = "")
+pie(slices, labels = lbls, col = heat.colors(3),cex = 1.5)
+#adding legend and title
+legend(x = 1.8, y = 0.1, inset = .05, title = "Coronavirus cases", 
+legend = c("Total Deaths", "Total Recovered", "Total Active"), 
+fill = heat.colors(3), horiz = FALSE, cex = 0.9, text.width = 0.8)
+title("Fig.1. Global Statistics of Coronavirus Cases", adj = 0.5, line = -15)
+```
+
+
+The dataset has number of confirmed cases, recovery, deaths, and other related data for 219 countries, across 6 continents.
+From Fig.1, the global trends in coronavirus cases as of 15th March 2021 can be seen.
+It can be observed that 80.64% of total coronavirus cases recorded globally are recovered, with remaining 15.62% active cases.
+Unfortunately, 2.21% of the cases have resulted in death.
+
+
+The descriptive statistics for the numerical variables in COVID-19 global dataset is visualized using boxplots, as shown in Fig.2.
+
+
+
+```{r, fig.height = 6.4, echo=FALSE}
+#plot2####\
+##summary statistics
+
+#box plots coronavirus cases globally for 219 countries
+#divides the frame into 3X3
+#run all the codes for boxplots to
+par(mfrow=c(2,3))
+boxplot(covid_summary$total_confirmed, main = "Fig.2.a Total confirmed cases", ylab = "Cases")
+boxplot(covid_summary$total_deaths, main = "2.b Total death cases", ylab = "Cases")
+boxplot(covid_summary$active_cases, main = "2.c Total active cases", ylab = "Cases")
+boxplot(covid_summary$serious_or_critical, main = "2.d Total serious cases", ylab = "Cases")
+boxplot(covid_summary$total_cases_per_1m_population, main = "2.e Total cases per 1M", ylab = "Cases")
+boxplot(covid_summary$total_deaths_per_1m_population, main = "2.f Total deaths cases per 1M", ylab = "Cases")
+
+#summary(covid_summary)
+```
+
+Fig.2.a gives the summary statistics for the total confirmed cases of COVID-19 for 219 countries.
+The mean and median of the total confirmed cases is 551666 and 34999, respectively.
+Majority of the countries fall within the first and third quartile between 4048 and 233994
+It is interesting to note that the minimum cases recorded are as low as 1 and the and maximum cases are 30138586. However, some of the countries have significantly high number of confirmed cases, with the USA having the highest, accounting to 30138586.
+The maximum cases in a country in the world is more than 100 times the 3rd quartile for total confirmed cases.
+
+The second boxplot (Fig.2.b) shows the summary of the distribution of total deaths in different countries.
+The observed mean and median of total deaths are 13234.5 and 695.5, respectively.
+It is notable that the minimum number of deaths is in a country is 1 and the maximum value is 548013.
+The outliers in the plot reveal that there are many countries which have more number of deaths than the median value.
+
+In summary statistics of active cases (Fig.2.c), the boxplot reveals that the maximum active cases reported is 7304022, which shows that there is one country with a significantly high peak in cases.
+Most of the countries in the world have active cases between the range of 260 and 21675, with the mean and median of active cases being, 86959 and 3079, respectively.
+
+
+Boxplot from Fig.2.d shows the number of serious or critical cases.
+The statistics show that the mean and median of critical cases is 617.4 and 72, respectively.
+While, most of the countries have cases within the range of 13.5 and 480.5, the minimum number of cases is found to be 1 and the maximum is 9286.
+
+The boxplot in Fig.2.e gives the summary for COVID-19 confirmed cases for 1 million population for all the countries. The maximum cases per 1 million population across all the countries are 145943. The mean and the median of cases is 25007 and 13142, respectively.
+It is evident from the plot that many countries have more cases than the median value.
+
+Fig.2.f shows the death of COVID-19 patients per 1 million population for 219 countries. Among the number of deaths reported by different countries per 1 million population, the maximum and minimum deaths are 2791 and 1, respectively. While, the mean is 466.8, the median is given by 193.
+There are a few countries which have more deaths per 1 million population than the most of the countries in the world.
+
+We are going to analyse the patterns in transmission and severity of coronavirus cases in 5 continents of the world. This is done by aggregating the cases in all the countries in each continent. The continents included in the study are Africa, Asia, Europe, North America, and South America. As the dataset does not include information about Antarctica, it is not part of this analysis. Since, the population in the continent of Australia/Oceania is significantly low, we are not including it in this study for comparison with the other continents which have much larger populations.
+
+```{r , echo=FALSE, fig.width=3.1, fig.height=4.1}
+#drop Australia/Oceania from the dataset
+covid_summary<-subset(covid_summary, continent != "Australia/Oceania")
+
+#plot3 ####
+#coronavirus cases per continent
+#add the confirmed cases for all the countries by continent
+continent_confirmed_cases<-aggregate(covid_summary$total_confirmed, by=list(Category=covid_summary$continent), FUN=sum)
+#convert to millions
+continent_confirmed_cases$cases_in_millions<-continent_confirmed_cases$x/1e6 
+
+#plot
+ggplot(continent_confirmed_cases, aes(x = reorder(Category,desc(cases_in_millions)), y = cases_in_millions))+ geom_col(fill="seagreen4")+
+labs(caption = "Fig.3. Total confirmed cases per continent", x = "Continent", y = "Cases (Millions)")+
+geom_text(aes(label = paste(round(cases_in_millions, digit=1), "M", sep = "")), position = position_dodge(width = 0.9), size = 2.5, vjust=-1)+
+theme_minimal(base_size=10)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.8)))+
+theme(axis.text.x=element_text(angle=90,hjust=1))
+
+
+#plot4 ####
+#coronavirus active cases per continent
+#drop missing values in the column
+continent_active_cases<-covid_summary%>%drop_na(any_of("active_cases"))
+#add the active cases for all the countries by continent
+continent_active_cases<-aggregate(continent_active_cases$active_cases, by=list(Category=continent_active_cases$continent), FUN=sum)
+#convert to millions
+continent_active_cases$cases_in_millions<-continent_active_cases$x/1e6
+
+#plot
+ggplot(continent_active_cases, aes(x = reorder(Category, desc(cases_in_millions)), y = cases_in_millions))+ 
+geom_col(fill="gray43")+
+labs(caption = "Fig.4. Total active cases per continent", x = "Continent", y = "Cases (Millions)")+
+geom_text(aes(label = paste(round(cases_in_millions, digit=1), "M", sep = "")), position = position_dodge(width = 0.9), size = 2.5, vjust=-1)+
+theme_minimal(base_size=10)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.8)))+
+theme(axis.text.x=element_text(angle=90,hjust=1))
+
+```
+
+It has been more than a year since the world started grappling with the pandemic due to coronavirus.
+The pandemic has impacted the whole world and each region has been facing its own challenges.
+Meanwhile, it is important to note that the intensity of coronavirus cases and deaths has been observed to be different in different parts of the world.
+It is essential to analyse these patterns in COVID-19 in different parts of the world.
+Further, it will aid in giving rise to crucial questions and analysis on the factors resulting for the varied intensity.
+
+Fig.3 shows the total number of confirmed cases in 5 different continents.
+It is observed that Europe has the highest number of cases of coronavirus in the world, with 36.4 million cases. This accounts to 30.16% of the total cases worldwide. The fraction of cases recorded in North America is 28.68%, which is almost equal to Europe.
+On the other hand, Africa has the least number of confirmed cases, with a proportion of 3.37%.
+
+Over the months, as seen from Fig.1 previously, a significant portion of 80.64% infected people have recovered, with 15.62% active cases across the globe.
+From Fig.4 we can analyse the number of active cases distributed by continent.
+A significant portion of 9.6 million cases, resulting to 51.01% of the total active cases in the world is in North America.
+This is followed by 8 million cases (42.28%) in Europe.
+Africa and South America have the least proportion of active cases, with 1.83% and 6.39 % of the total cases, respectively.
+
+The severity of COVID-19 in 5 different continents in the study is analysed by using the total number of critical cases and deaths.
+As shown in Fig.5 the number of critical cases due to coronavirus is the highest in Europe, with 25.7k cases (29.13%), followed by 22.4k (25.48%) in North America.
+Both, Asia and South America also have a significant proportion of critical cases, accounting to 24.69% and 21.63%, worldwide.
+However, Africa has the least proportion of critical cases (2.86%), in comparison to the 4 other continents.
+
+
+```{r, echo=FALSE, fig.width=3.1, fig.height=4.2}
+#plot5####
+#critical cases per continent
+#drop missing values in the column
+continent_critical_cases<-drop_na(covid_summary,any_of("serious_or_critical"))
+#add critical cases for all countries by continent
+continent_critical_cases<-aggregate(continent_critical_cases$serious_or_critical, by=list(Category=continent_critical_cases$continent), FUN=sum)
+
+#plot
+ggplot(continent_critical_cases, aes(x = reorder(Category, desc(x)), y = x))+ geom_col(fill="cyan4")+
+labs(caption = "Fig.5. Total critical cases per continent", x = "Continent", y = "Cases (Thousands)")+
+geom_text(aes(label = x), position = position_dodge(width = 0.9), size = 2, vjust=-1)+
+theme_minimal(base_size=10)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.8)))+
+theme(axis.text.x=element_text(angle=90,hjust=1))
+
+#plot6####
+#number of deaths
+#aggregate of number of deaths in all the countries by continents
+continent_deaths_cases<-aggregate(covid_summary$total_deaths, by=list(Category=covid_summary$continent), FUN=sum)
+#converting to lakhs
+continent_deaths_cases$cases_in_lakhs<-continent_deaths_cases$x/1e5
+
+#plot
+ggplot(continent_deaths_cases, aes(x = reorder(Category, desc(cases_in_lakhs)), y = cases_in_lakhs))+ 
+geom_col(fill="coral3")+
+labs(caption = "Fig.6. Total deaths cases per continent", x = "Continent", y = "Cases (Lakhs)")+
+geom_text(aes(label = paste(round(cases_in_lakhs, digit=1), "L", sep = "")), position = position_dodge(width = 0.9), size = 2, vjust=-1)+
+theme_minimal(base_size=10)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.8)))+
+theme(axis.text.x=element_text(angle=90,hjust=1))
+
+```
+
+Moreover, it is unfortunate that 2.21% of the people who tested positive for COVID-19 lost their lives. The distribution of total number of deaths across continents is plotted in Fig.6.
+It is evident that Europe has the highest number of deaths in the world (8.6 lakh).
+It accounts to 30.18% of all the deaths globally.
+In addition, a significant proportion, 28.16% deaths are reported in North America as well.
+The number of deaths in South America is higher than the numbers in Asia, by 1.17%.
+Africa has reported 1.1 lakh deaths which is a significant number, however, it is the lowest in contrast to other continents in the study, with 3.85% of the global deaths.
+It is notable that Europe and a large portion of North America lie in higher latitudes and belong to the colder regions of the world, in contrast to Africa and South America which belong to the tropical or hotter regions in the world.
+A major portion of Asia also belongs to colder region.
+As observed in the initial analysis, a similar pattern is evident among continents in the colder region of the world and a common pattern among the continents in hotter regions of the world.
+
+We will further analyse if colder regions are more impacted by coronavirus transmission and have more deaths.
+In order to do so, we will perform a more specific analysis on 5 countries picked among the 10 countries with highest coronavirus cases in the world.
+Fig.7 shows the top 10 countries in the world with highest COVID-19 confirmed cases.
+USA has the highest confirmed cases accounting to 30.1 million.
+Brazil and India have 11.5 million and 11.4 million cases, respectively.
+Russia and Italy are among the 5 countries part of this analysis and they account to 4.4 million and 3.2 million cases, respectively.
+It is also important to highlight that we are classifying USA, Italy and Russia as belonging to cold regions.
+On the other hand, India and Brazil are among the hot regions of the world.
+
+
+```{r, fig.height=4.5, fig.width=6}
+#plot7 ####
+#top 10 most affected countries
+# according to total number of confirmed cases
+top_affected_countries<-covid_summary[order(covid_summary$total_confirmed, decreasing = TRUE), ]
+top_20_countries<-top_affected_countries[1:10,]
+#in millions
+top_20_countries$total_confirmed<-top_20_countries$total_confirmed/1e6
+
+#plot
+ggplot(top_20_countries, aes(x = reorder(country, total_confirmed), y = total_confirmed))+
+geom_col(fill="darkorange3")+
+labs(caption="Fig.7. Top 10 countries with the highest Coronavirus confirmed cases", y = "Cases (Millions)", x = "Country")+
+geom_text(aes(label = paste(round(total_confirmed, digits = 1), "M", sep = "")), position = position_dodge(width = 0.9), size = 2, hjust=0)+
+theme_minimal(base_size=10)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.9)))+
+coord_flip()
+```
+
+Firstly, we are going to perform time-series analysis for all the 5 countries from February 2020 to March 2021, observing the increase or decrease in total coronavirus cases in different months of the year and its associated climate.
+Fig.8 shows the overall cumulative confirmed COVID-19 cases across the year for the 5 countries. It can be observed that in Brazil, the cases started going up the curve after June through November, which are winter months in the country. However, the winters in Brazil are not harsh as it lies in hotter region of the world. From the curve it can be observed that the cases have reduced slightly around December and gone up again from January. Considering India, the cases have increased after July, till November; during the winter months in the country, the curve is almost flattened. Further, it is interesting to observe from the plots for the 3 countries, USA, Italy and Russia, the cases have risen significantly around the month of November, which is also the beginning of harsh winters.
+The graphs suggest that the cases were high in winters as compared to summers, especially for countries in colder region, which face harsh winters. 
+
+It is notable that the USA has the highest number of cases in the year 2020 followed by year 2021 with the total cases above 30,000,000. The USA also has the highest number of confirmed cases per 1 million population which is 87435, followed by Brazil and Italy. Out of these 5 countries India has the least number of cases per 1 million population (7966).
+
+Furthermore, from Fig.9 we can analyse the cumulative deaths in the 5 most infected countries across the year 2020 and 2021. Both, Brazil and India follow a similar curve as their respective curves from Fig.8 for cumulative confirmed cases. Number of deaths have increased from June to November in Brazil and from July to November in India. 
+
+
+```{r, fig.height=6}
+#plot8####
+#time series analysis of cumulative confirmed cases
+#covid-19 daily cases data (another file in the same dataset)
+#https://www.kaggle.com/josephassaker/covid19-global-dataset?select=worldometer_coronavirus_daily_data.csv
+covid_daily<-read.csv("worldometer_coronavirus_daily_data.csv", header = TRUE)
+
+#convert the class of "date" variable to date
+covid_daily$date<-as.Date(covid_daily$date)
+
+#plot the cumulative confirmed cases for 5 countries over time 
+covid_daily %>% filter(country %in% c("Brazil", "USA", "Italy", "India", "Russia")) %>%
+ggplot(aes(x = date, y = cumulative_total_cases, color = country)) +
+geom_line(show.legend = FALSE) +
+scale_x_date(date_breaks = "2 month", date_labels = "%d %b") +
+scale_y_continuous(labels = scales::comma) +
+labs(y = "Number of confirmed cases", caption = "Fig.8 Cumulative confirmed COVID-19 cases") +
+facet_wrap(~country, scales = "free", ncol = 1)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.9)))
+
+```
+
+Moving on to the analysis of cold countries, Italy has a small spike in cases in April, however, it is flattened after May. It is evident that the death cases have increased again after November in winter. A similar trend in observed in the USA and Russia. The number of deaths which were rising gradually can be observed to have increased along relatively steep curves after November. 
+
+The USA has recorded the highest number of deaths followed by Brazil, India and Italy. In addition, it is crucial to note that although there are other countries with significantly higher cases than Italy, the number of deaths per 1 million population in Italy is the highest in the world, with 1605 deaths. After Italy, the USA has the highest number of deaths per 1 million population(1567) and India has the least in this list of countries with 113 deaths.
+
+```{r, fig.height=6}
+#plot9####
+#time series analysis of cumulative deaths
+
+#plot the cumulative deaths for 5 countries over time
+covid_daily %>% filter(country %in% c("Brazil", "USA", "Italy", "India", "Russia")) %>%
+ggplot(aes(x = date, y = cumulative_total_deaths, color = country)) +
+geom_line(show.legend = FALSE) +
+scale_x_date(date_breaks = "2 month", date_labels = "%d %b") +
+scale_y_continuous(labels = scales::comma) +
+labs(y = "Number of deaths", caption = "Fig.9 Cumulative Deaths in 5 highly affected countries") +
+facet_wrap(~country, scales = "free", ncol = 1)+
+theme(plot.caption = element_text(hjust=0.5, size=rel(0.9)))
+```
+ 
+
+# Results 
+
+From the analysis of trends in coronavirus in 5 continents, it is evident that Europe and North America have the highest number of total confirmed cases, total deaths and active cases, globally as of March 15th, 2021. It is notable that Europe also has the highest number of critical cases in the world. Whereas, Africa and South America have significantly lower number of coronavirus cases. In addition, Asia has cases relatively higher than Africa and south America, yet lower than Europe and North America. The pattern of cold regions or continents(Europe and North America) having a high number of confirmed cases and deaths is evident from the analysis, in contrast to lower number of cases in hotter regions or continents(Africa and South America). Another interesting observation is that Asia being spread out in both colder and hotter regions of the world, has moderate number of coronavirus cases when compared to the rest of the continents. 
+
+Furthermore, the analysis of 5 highly affected countries by coronavirus revealed that the countries like the USA, Italy and Russia, which are located in the colder regions of the world and experience harsh winters, observed rise in confirmed cases and deaths during winter or during the months with cold climate. However, the same trend was not evident in hotter countries like Brazil and India.
+
+# Conclusion
+
+In conclusion, a pattern was found between colder regions and higher number of COVID-19 confirmed cases and deaths. This suggests that regions with colder climate are more susceptible to COVID-19, than hotter climate or moderate climate. It is also important to note that several other factors such as rate of local transmission, population of high-risk groups, and access to quality medical care play a major role in the extent of impact of COVID-19. In addition, cold climate may be an additional factor responsible for increase in transmission and the severity of COVID-19.
+Further, meticulous studies for a longer period of time, taking into account the other factors and  analysing the relation between cold climate and COVID-19 can shed more light on this. It is also important to note that the inconsistency across different regions in reporting the cases may alter the results and makes it challenging to understand the true relations underlying.
+
+# References
+
+[1] *World Health Organization Declares COVID-19 a 'Pandemic.' Here's What That Means*.
+TIME. Available from: <https://time.com/5791661/who-coronavirus-pandemic-declaration/>
+
+[2] <https://www.who.int/news-room/q-a-detail/coronavirus-disease-covid-19>
+
+[3] <https://www.afro.who.int/publications/coronavirus>
+
+[4] *COVID-19: vulnerable and high risk groups*.
+Available from: <https://www.who.int/westernpacific/emergencies/covid-19/information/high-risk-groups>
+
+[5] Chandi C. Mandal, M.S. Panwar.*Can the summer temperatures reduce COVID-19 cases?*. Public Health, Volume 185. 2020. <https://doi.org/10.1016/j.puhe.2020.05.065>
+
+[6] Roy, I. *The role of temperature on the global spread of COVID-19 and urgent solutions*. Int. J.Environ.Sci.Technol.2020.<https://doi.org/10.1007/s13762-020-02991-8>
+
+[7] *Covid-19 Global Dataset*. kaggle. Available from:
+https://www.kaggle.com/josephassaker/covid19-global-dataset
+
+# Note:
+This analysis and report, along with the presentation was prepared by the team, Man with a Movie Camera. The team comprises of the following members,
+
+[1] Ananya Devaraju (ad20322)
+
+[2] Asim Habib (ah20777)
+
+[3] Muhammad Aqib Javed (mj20574)
+
+[4] Karamjeet Kaur (kk21033)
+
+[5] Dishant Sharma (ds21824)
